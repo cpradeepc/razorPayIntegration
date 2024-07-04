@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Onlien payment system...</title>
+</head>
+<h4>Pay: {{.Amount}}</h4>
+<button id="rzp-button1">Pay</button>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+    var options = {
+        "key": '{{.UsrKey}}',
+        "amount": '{{.Amount}}',
+        "currency": '{{.Currency}}',
+        "name": '{{.OrgName}}',
+        "description": '{{.Description}}',
+        "image": '{{.ImgUrl}}',
+        "order_id": '{{.OrderId}}',
+        "handler": function (response) {
+
+            pay_id = (response.razorpay_payment_id);
+            ord_id = (response.razorpay_order_id);
+            signature = (response.razorpay_signature);
+            // console.log("response:", response);
+            console.log("response.razorpay_payment_id:", response.razorpay_payment_id);
+            console.log("response.razorpay_order_id:", response.razorpay_order_id);
+            console.log("response.razorpay_signature:", response.razorpay_signature);
+
+            // var  pay_success_url = (location.host+"/payment-success?pay-resp="+response);
+            window.location.replace("http:/payment-success?pay_id=" + pay_id + "&ord_id=" + ord_id + "&signature=" + signature);
+            // window.location.replace("http:/payment-success?paymentid=" + a + "&orderid=+" + b + "&signature=" + c);
+        },
+        //Autofill customer contact details, especially phone number to ease form completion. Include customer’s phone number in the contact parameter of the JSON request's prefill object. Format: +(country code)(phone number). Example: “contact": "+919000090000").
+        "prefill": {
+            "name": '{{.Name}}',
+            "email": '{{.Email}}',
+            "contact": '{{.Contact}}'
+        },
+        //Set of key-value pairs that can be used to store additional information about the payment. It can hold a maximum of 15 key-value pairs, each 256 characters long (maximum).
+        "notes": {
+            "address": "Org Address"
+        },
+        "theme": {
+            "color": "#3399cc"
+        },
+        "model": {
+            "confirm_close": true
+        },
+        "callback_url": true,
+        "remember_customer": true,
+        "config": {
+            "display": {
+                "language": "English"
+            }
+        },
+        "retry": {
+            "enabled": false
+        },
+    };
+    console.log("option data:", options);
+
+    //fn for payment process
+    var rzp1 = new Razorpay(options);
+    rzp1.on('payment.failed', function (response) {
+        resp_code = (response.error.code);
+        resp_desp = (response.error.description);
+        resp_source = (response.error.source);
+        resp_step = (response.error.step);
+        resp_reason = (response.error.reason);
+        resp_ord_id = (response.error.metadata.order_id);
+        resp_pay_id = (response.error.metadata.payment_id);
+
+        window.location.replace("http:/payment-failed?resp_code=" + resp_code + "&resp_desp=" + resp_desp + "&resp_source=" + resp_source + "&resp_step=" + resp_step + "&resp_reason=" + resp_reason + "&resp_ord_id=" + resp_ord_id + "&resp_pay_id=" + resp_pay_id);
+    });
+
+    document.getElementById('rzp-button1').onclick = function (e) {
+        rzp1.open();
+        console.log("e:", e)
+        e.preventDefault();
+    };
+</script>
+
+</html>
